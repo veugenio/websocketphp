@@ -1,24 +1,85 @@
 <!DOCTYPE html>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
 <html>
   <head>
     <title>Chat html</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      .message {
+        padding: 20px;
+      }
+      .message:nth-child(odd) {
+        background-color: rgba(0, 120, 120, .05);
+      }
+      .message:nth-child(even) {
+
+      }
+      .new-message-box {
+        
+      }
+      .new-message-box textarea {
+        padding: 20px;
+        border: solid 1px rgba(0, 120, 120, .1);
+      }
+      .new-message-box button {
+        padding: 20px;
+        background: rgba(0, 120, 120, 1);
+        border: none;
+        vertical-align: top;
+        color: white;
+        text-transform: uppercase;
+      }
+    </style>
   </head>
   <body>
-    <div>
+    <!-- https://html.spec.whatwg.org/multipage/semantics-other.html#conversations -->
+    <div id="chat">
+      <p v-for="message in messages" class="message">{{ message.html }}</p>
       
+      <div class="new-message-box">
+        <textarea v-model="newMessage" placeholder="Your message"></textarea>
+        <button v-on:click="send">Send</button>
+      </div>
     </div>
+
+    <!-- https://vuejs.org/v2/guide/ -->
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
     <script>
+      // Message list.
+      var messages = [];
+
       // Then some JavaScript in the browser:
-      var conn = new WebSocket('ws://localhost:8002/echo');
-      conn.onmessage = function(e) { console.log(e.data); };
-      conn.onopen = function(e) { conn.send('Hello Me!'); };
+      var conn = new WebSocket('ws://localhost:8002/chat');
+
+      // When the connection is open
+      conn.onopen = function(e) {
+        // Enable chat now...
+      };
+
+      var chat = new Vue({
+        el: '#chat',
+        data: {
+          newMessage: '',
+          messages: messages,
+        },
+        methods: {
+          send: function () {
+            var newMessage = this.newMessage;
+            messages.push({
+              html: 'You: ' + newMessage,
+              timestamp: Date.now(),
+            });
+            conn.send(newMessage);
+          }
+        }
+      })
+
+      conn.onmessage = function(e) {
+        messages.push({
+          html: 'User: ' + e.data,
+          timestamp: Date.now(),
+        });
+      };
     </script>
   </body>
 </html>
